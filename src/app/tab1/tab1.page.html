@@ -1,0 +1,35 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title> Weather Kara </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-card class="card">
+    <div class="search">
+      <ion-input
+        clearInput
+        class="search-bar"
+        placeholder="Search"
+        [(ngModel)]="searchedCity"
+      ></ion-input>
+      <button class="search-button" (click)="onSearch()">
+        <ion-icon class="search-icon" name="search"></ion-icon>
+      </button>
+    </div>
+    <h2 class="city">
+      {{currentWeather.name}}, {{currentWeather.sys.country}}
+    </h2>
+    <h1 class="temp">{{onConvertFahrenheit(currentWeather.main.temp)}}°C</h1>
+    <div class="flex">
+      <img
+        src="{{getWeatherIcon(currentWeather.weather[0].icon)}}"
+        alt=""
+        class="icon"
+      />
+      <div class="description">{{currentWeather.weather[0].description}}</div>
+    </div>
+    <div class="humidity">Humidity: {{currentWeather.main.humidity}} %</div>
+    <div class="wind">Wind Speed: ~ {{onConvertMilesToKilo(currentWeather.wind.speed)}} km/h</div>
+  </ion-card>
+</ion-content>
