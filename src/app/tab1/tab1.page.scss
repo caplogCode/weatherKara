@@ -1,6 +1,8 @@
 
   ion-content {
-    --background: url('https://source.unsplash.com/1600x900/?landscape');  
+    --background: url('https://source.unsplash.com/1600x900/?landscape');
+    background-repeat: no-repeat !important;
+    background-size: auto !important;  
   }
 
   .card {
@@ -8,7 +10,6 @@
     color: white;
     padding: 2em;
     border-radius: 30px;
-    max-width: 420px;
     margin: 1em;
   }
   
@@ -36,9 +37,8 @@
     width: 22px;
   }
 
-  input.search-bar {
-    border: none;
-    outline: none;
+  .search-bar {
+    border: 1px solid white;
     padding: 0.4em 1em;
     border-radius: 24px;
     background: #7c7c7c2b;
