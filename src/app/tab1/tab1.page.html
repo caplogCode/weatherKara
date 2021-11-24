@@ -4,7 +4,9 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content 
+[fullscreen]="true"   
+[scrollEvents]="true">
   <ion-card class="card">
     <div class="search">
       <ion-input
@@ -32,4 +34,16 @@
     <div class="humidity">Humidity: {{currentWeather.main.humidity}} %</div>
     <div class="wind">Wind Speed: ~ {{onConvertMilesToKilo(currentWeather.wind.speed)}} km/h</div>
   </ion-card>
+ 
+    <ion-card class="card-chart">
+      <ion-card-header>
+        <ion-badge color="dark">
+          Weather-Chart of {{translateUnixTimestamp(currentWeather.dt)}}
+          <ion-icon name="calendar-outline">
+            </ion-icon></ion-badge>
+      </ion-card-header>
+      <ion-card-content>
+        <canvas #lineCanvas style="position: relative; height:20vh; width:40vw"></canvas>
+      </ion-card-content>
+    </ion-card>
 </ion-content>
