@@ -1,6 +1,6 @@
 # weatherKara
 
-**AUTHOR: MARKUS KARA
+## AUTHOR: MARKUS KARA
 
 ## Used Technologies
 
