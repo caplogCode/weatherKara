@@ -27,6 +27,7 @@
 
 ## Disclaimer
 This software can contain bugs and errors. \n If you have any questions, please contact: markuskara@icloud.com
+This Webapp needs access to your current location, please pass the access so that everything is working fine.
 
 Now you are good to go.
 
