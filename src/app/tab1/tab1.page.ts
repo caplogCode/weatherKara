@@ -12,10 +12,10 @@ import { RouterOutlet } from '@angular/router';
   styleUrls: ['tab1.page.scss'],
 })
 export class Tab1Page implements OnInit, AfterViewInit {
-  // Importing ViewChild. We need @ViewChild decorator to get a reference to the local variable 
+  // Importing ViewChild. We need @ViewChild decorator to get a reference to the local variable
   // that we have added to the canvas element in the HTML template.
   @ViewChild('lineCanvas') private lineCanvas: ElementRef
-  
+
   lineChart: any
   doubleLineChart: any
 
@@ -32,12 +32,12 @@ export class Tab1Page implements OnInit, AfterViewInit {
     private weatherService: WeatherServiceService,
     private toastController: ToastController) { }
 
-      // When we try to call our chart to initialize methods in ngOnInit() it shows an error nativeElement of undefined. 
+  // When we try to call our chart to initialize methods in ngOnInit() it shows an error nativeElement of undefined.
   // So, we need to call the chart method in ngAfterViewInit() where @ViewChild and @ViewChildren will be resolved.
   ngAfterViewInit() {
     //Initially
-    this.getForecastData("Paderborn")
-    setTimeout( () => { this.onDrawLineChart() }, 2000 );
+    this.getForecastData('Paderborn')
+    setTimeout(() => { this.onDrawLineChart() }, 2000);
   }
 
   ngOnInit() {
@@ -47,7 +47,8 @@ export class Tab1Page implements OnInit, AfterViewInit {
   }
 
   /* Returns the formatted temperature value as celsius */
-  onConvertFahrenheit = (tempValue: string) => (Math.round(((parseInt(tempValue) - 32) * 5) / 9 * 100) / 100).toFixed(1);
+  // eslint-disable-next-line radix
+  onConvertFahrenheit = (tempValue: string) => (((parseFloat(tempValue) - 32) * 5) / 9).toFixed(1);
 
   onConvertMilesToKilo = (speedValue) => (Math.round(speedValue * 1.609 * 100) / 100).toFixed(2);
 
@@ -67,13 +68,17 @@ export class Tab1Page implements OnInit, AfterViewInit {
     }
   }
 
- getForecastData (forecastValue: string) {
-  this.weatherService.getWeatherForecastDataByCity(forecastValue, 3).subscribe(foreCastData => {
-    this.foreCastWeather = foreCastData
-    console.log(foreCastData)
-    this.onDrawLineChart()
-  })
- }
+  getForecastData(forecastValue: string) {
+    this.weatherService.getWeatherForecastDataByCity(forecastValue, 39).subscribe(foreCastData => {
+      this.foreCastWeather = foreCastData
+      console.log(foreCastData)
+
+      if (this.lineChart !== undefined) {
+        this.lineChart.destroy()
+      }
+      this.onDrawLineChart()
+    })
+  }
 
   getWeatherIcon = (icon: string) => `https://openweathermap.org/img/wn/${icon}.png`;
 
@@ -105,38 +110,69 @@ export class Tab1Page implements OnInit, AfterViewInit {
     console.log('onDidDismiss resolved with role', role);
   }
 
-  formatDayAndTimeString(dayTime: string){
-    return dayTime
-  }
-
   // We just need data of one day, this is why i can take it like that
   foreCastLabelsHelper(index: number, type: string) {
-    switch (type) {
-    case "labels": {
-    return this.foreCastWeather.list[index].dt_txt
-    .substring(11, this.foreCastWeather.list[index].dt_txt.length - 6)+" '"
-  }
-  case "dataTemp": {
-    return this.onConvertFahrenheit(this.foreCastWeather.list[index].main.temp)
-  }
-  case "dataAirPressure": {
-    return this.onConvertMilesToKilo(this.foreCastWeather.list[index].wind.speed)
-  }
-  case "dataHumidity": {
-    return this.foreCastWeather.list[index].main.humidity
-  }
-  }
+
   }
 
-  translateUnixTimestamp (timestamp: number) {
-   return new Date(timestamp * 1000).toDateString()
+  translateUnixTimestamp(timestamp: number) {
+    return new Date(timestamp * 1000).toDateString()
   }
 
   onDrawLineChart() {
+    const labelsValues = []
+    const days = []
+    const temperatureValues = []
+    const airPressureValues = []
+    const humidityValues = []
+    let day
+    let temperature = 0
+    let airPressure = 0
+    let humidity = 0
+    let counter = -1
+
+    this.foreCastWeather.list.forEach(element => {
+      const date = new Date(element.dt * 1000)
+      if ( counter === -1) {
+        if ( day !== date.getDate()) {
+          days.push(date.getDate() + '.' + (date.getMonth() + 1) + '.')
+          day = date.getDate()
+        }
+        counter = 0
+      }
+
+      if ( day !== date.getDate()) {
+        days.push(date.getDate() + '.' + (date.getMonth() + 1) + '.')
+        day = date.getDate()
+        temperatureValues.push(this.onConvertFahrenheit(String(temperature / counter)))
+        airPressureValues.push(this.onConvertMilesToKilo(airPressure / counter))
+        humidityValues.push(humidity / counter)
+        temperature = 0
+        airPressure = 0
+        humidity = 0
+        counter = 0
+        temperature += element.main.temp
+        airPressure += element.wind.speed
+        humidity += element.main.humidity
+        counter++
+      } else {
+        counter++
+        //console.log('ELSE Before = ' + temperature + ' ' + airPressure + ' ' + humidity)
+        temperature += element.main.temp
+        airPressure += element.wind.speed
+        humidity += element.main.humidity
+        //console.log('ELSE After = ' + temperature + ' ' + airPressure + ' ' + humidity)
+      }
+    })
+    
+    temperatureValues.push(this.onConvertFahrenheit(String(temperature / counter)))
+    airPressureValues.push(this.onConvertMilesToKilo(airPressure / counter))
+    humidityValues.push(humidity / counter)
+
     this.lineChart = new Chart(this.lineCanvas.nativeElement, {
       type: 'line',
       data: {
-        labels: [this.foreCastLabelsHelper(0, "labels"), this.foreCastLabelsHelper(1, "labels"), this.foreCastLabelsHelper(2, "labels")],
+        labels: days,
         datasets: [
           {
             label: 'Temperature',
@@ -157,11 +193,9 @@ export class Tab1Page implements OnInit, AfterViewInit {
             pointHoverBorderWidth: 2,
             pointRadius: 5,
             pointHitRadius: 10,
-            data: [this.foreCastLabelsHelper(0, "dataTemp"), 
-            this.foreCastLabelsHelper(1, "dataTemp"), 
-            this.foreCastLabelsHelper(2, "dataTemp")],
+            data: temperatureValues,
             spanGaps: false,
-          }, 
+          },
           {
             label: 'Humidity',
             fill: false,
@@ -181,11 +215,9 @@ export class Tab1Page implements OnInit, AfterViewInit {
             pointHoverBorderWidth: 2,
             pointRadius: 5,
             pointHitRadius: 10,
-            data: [this.foreCastLabelsHelper(0, "dataHumidity"), 
-            this.foreCastLabelsHelper(1, "dataHumidity"), 
-            this.foreCastLabelsHelper(2, "dataHumidity")],
+            data: humidityValues,
             spanGaps: false,
-          }, 
+          },
           {
             label: 'Air pressure',
             tension: 0.1,
@@ -205,9 +237,7 @@ export class Tab1Page implements OnInit, AfterViewInit {
             pointHoverBorderWidth: 2,
             pointRadius: 5,
             pointHitRadius: 10,
-            data: [this.foreCastLabelsHelper(0, "dataAirPressure"), 
-            this.foreCastLabelsHelper(1, "dataAirPressure"), 
-            this.foreCastLabelsHelper(2, "dataAirPressure")],
+            data: airPressureValues,
             spanGaps: false,
           }
         ]
