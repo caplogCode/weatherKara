@@ -32,12 +32,15 @@ export class Tab1Page implements OnInit, AfterViewInit {
     private weatherService: WeatherServiceService,
     private toastController: ToastController) { }
 
-  // When we try to call our chart to initialize methods in ngOnInit() it shows an error nativeElement of undefined.
+  // When we try to call the chart to initialize methods in ngOnInit() it shows an error nativeElement of undefined.
   // So, we need to call the chart method in ngAfterViewInit() where @ViewChild and @ViewChildren will be resolved.
   ngAfterViewInit() {
     //Initially
     this.getForecastData('Paderborn')
     setTimeout(() => { this.onDrawLineChart() }, 2000);
+
+    // Advice Toast
+    this.presentWarnToast('Wetterdaten werden geladen...')
   }
 
   ngOnInit() {
@@ -90,35 +93,21 @@ export class Tab1Page implements OnInit, AfterViewInit {
     this.getForecastData(this.searchedCity)
   };
 
-  async presentWarnToast(title: string, msg: string) {
+  async presentWarnToast(msg: string) {
     const toast = await this.toastController.create({
-      header: title,
       message: msg,
-      position: 'bottom',
-      buttons: [{
-        text: 'Cancel',
-        role: 'cancel',
-        handler: () => {
-          console.log('Cancel clicked')
-        }
-      }
-      ]
+      duration: 400
     });
-    await toast.present();
-
-    const { role } = await toast.onDidDismiss();
-    console.log('onDidDismiss resolved with role', role);
-  }
-
-  // We just need data of one day, this is why i can take it like that
-  foreCastLabelsHelper(index: number, type: string) {
-
+    toast.present();
   }
 
   translateUnixTimestamp(timestamp: number) {
     return new Date(timestamp * 1000).toDateString()
   }
 
+
+  // Draws the line chart, there are 39 entries (each day have 8), we're summing up all dates and
+  // calculating the average to have better look at the chart.
   onDrawLineChart() {
     const labelsValues = []
     const days = []
@@ -133,15 +122,15 @@ export class Tab1Page implements OnInit, AfterViewInit {
 
     this.foreCastWeather.list.forEach(element => {
       const date = new Date(element.dt * 1000)
-      if ( counter === -1) {
-        if ( day !== date.getDate()) {
+      if (counter === -1) {
+        if (day !== date.getDate()) {
           days.push(date.getDate() + '.' + (date.getMonth() + 1) + '.')
           day = date.getDate()
         }
         counter = 0
       }
 
-      if ( day !== date.getDate()) {
+      if (day !== date.getDate()) {
         days.push(date.getDate() + '.' + (date.getMonth() + 1) + '.')
         day = date.getDate()
         temperatureValues.push(this.onConvertFahrenheit(String(temperature / counter)))
@@ -157,14 +146,12 @@ export class Tab1Page implements OnInit, AfterViewInit {
         counter++
       } else {
         counter++
-        //console.log('ELSE Before = ' + temperature + ' ' + airPressure + ' ' + humidity)
         temperature += element.main.temp
         airPressure += element.wind.speed
         humidity += element.main.humidity
-        //console.log('ELSE After = ' + temperature + ' ' + airPressure + ' ' + humidity)
       }
     })
-    
+
     temperatureValues.push(this.onConvertFahrenheit(String(temperature / counter)))
     airPressureValues.push(this.onConvertMilesToKilo(airPressure / counter))
     humidityValues.push(humidity / counter)
